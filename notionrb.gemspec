@@ -3,16 +3,16 @@ $LOAD_PATH.push File.expand_path('lib', __dir__)
 require 'notion/version'
 
 Gem::Specification.new do |s|
-  s.name = 'notion-ruby-client'
+  s.name = 'notionrb'
   s.version = Notion::VERSION
-  s.authors = ['Nicolas Goutay']
-  s.email = 'nicolas.goutay@gmail.com'
+  s.authors = ['Nicolas Goutay', 'Ivan Lyubchenko']
+  s.email = 'lubchenko2044@gmail.com'
   s.platform = Gem::Platform::RUBY
   s.required_rubygems_version = '>= 1.3.6'
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- spec/*`.split("\n")
   s.require_paths = ['lib']
-  s.homepage = 'http://github.com/phacks/notion-ruby-client'
+  s.homepage = 'https://github.com/lyubchenko-ivan/notion-ruby-client'
   s.licenses = ['MIT']
   s.summary = 'Notion API client for Ruby.'
   s.add_dependency 'faraday', '>= 2.0'
