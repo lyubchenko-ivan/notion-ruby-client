@@ -20,26 +20,31 @@ module Notion
         end
 
         #
-        # Creates a new page in the specified database.
-        # Later iterations of the API will support creating pages outside databases.
+        # Creates a new page in the specified database (or data source) or as a child of an existing page.
         # Note that this iteration of the API will only expose page properties, not
         # page content, as described in the data model.
         #
+        # As of Notion-Version 2025-09-03, pages should be created under a data source
+        # (:parent.data_source_id) rather than a database. :parent.database_id remains
+        # supported for databases with a single data source.
+        #
         # @option options [Object] :parent
-        #   Parent of the page, which is always going to be a database in this version of the API.
+        #   Parent of the page: a data source, a database, or a page.
         #
         # @option options [Object] :properties
         #   Properties of this page.
         #   The schema for the page's keys and values is described by the properties of
-        #   the database this page belongs to. key string Name of a property as it
+        #   the data source this page belongs to. key string Name of a property as it
         #   appears in Notion, or property ID. value object Object containing a value
         #   specific to the property type, e.g. {"checkbox": true}.
         #
         # @option options [Object] :children
         #   An optional array of Block objects representing the Page’s content
         def create_page(options = {})
-          if options.dig(:parent, :database_id).nil? && options.dig(:parent, :page_id).nil?
-            throw ArgumentError.new('Required argument :parent.database_id or :parent.page_id required')
+          if options.dig(:parent, :data_source_id).nil? &&
+             options.dig(:parent, :database_id).nil? &&
+             options.dig(:parent, :page_id).nil?
+            throw ArgumentError.new('Required argument :parent.data_source_id, :parent.database_id or :parent.page_id required')
           end
 
           post("pages", options)

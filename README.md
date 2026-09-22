@@ -118,7 +118,9 @@ all_users
 
 ### Databases
 
-#### Query a database
+As of `Notion-Version` `2025-09-03`, a database can hold multiple **data sources**, and querying, and property-schema changes are performed against a data source, not the database itself. Use [`database`](#retrieve-a-database) to look up a database's data source ids, then see [Data sources](#data-sources) below. `database_query` is kept for reference but the underlying endpoint is deprecated — use [`data_source_query`](#query-a-data-source) instead.
+
+#### Query a database (deprecated)
 
 Gets a paginated array of [Page](https://developers.notion.com/reference/page) objects contained in the database, filtered and ordered according to the filter conditions and sort criteria provided in the request.
 
@@ -163,7 +165,7 @@ See the full endpoint documentation on [Notion Developers](https://developers.no
 
 #### Create a Database
 
-Creates a database as a subpage in the specified parent page, with the specified properties schema.
+Creates a database, with a single data source, as a subpage in the specified parent page, with the specified properties schema.
 
 ```ruby
 title = [
@@ -211,11 +213,13 @@ client.create_database(
 )
 ```
 
-See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/create-a-database).
+> Under the hood, the Notion API now expects the schema nested under `initial_data_source: { properties: ... }`. The `properties:` shorthand above is still accepted and wrapped automatically; you can also pass `initial_data_source:` directly.
+
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/create-database).
 
 #### Update a Database
 
-Updates an existing database as specified by the parameters.
+Updates an existing database as specified by the parameters. As of `2025-09-03` this only covers database-level fields (`title`, `description`, `icon`, `cover`, `is_inline`, `in_trash`, `is_locked`, `parent`) — use [`update_data_source`](#update-a-data-source) to change the property schema.
 
 ```ruby
 title = [
@@ -228,7 +232,7 @@ title = [
 client.update_database(database_id: 'dd428e9dd3fe4171870da7a1902c748b', title: title)
 ```
 
-See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/update-a-database).
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/update-database).
 
 #### Retrieve a database
 
@@ -238,7 +242,70 @@ Retrieves a [Database object](https://developers.notion.com/reference-link/datab
 client.database(database_id: 'e383bcee-e0d8-4564-9c63-900d307abdb0')
 ```
 
+The response's `data_sources` field lists the data source ids and names that belong to this database, e.g. `response.data_sources.first.id`, for use with the endpoints below.
+
 See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/retrieve-a-database).
+
+### Data sources
+
+> :blue_book: `relation` property **values** (e.g. when setting a `relation` property via `create_page`/`update_page`) must reference a `data_source_id` as of `Notion-Version` `2025-09-03` — `database_id` is no longer accepted when writing. Reading a page back still includes both `database_id` and `data_source_id` on relation values for compatibility. The gem does not validate property payloads (for any property type), so this is a data-shape change on the caller's side, not something enforced here.
+
+#### Query a data source
+
+Gets a paginated array of [Page](https://developers.notion.com/reference/page) objects contained in the data source, filtered and ordered according to the filter conditions and sort criteria provided in the request. This replaces `database_query` as of `Notion-Version` `2025-09-03`.
+
+```ruby
+database = client.database(database_id: 'e383bcee-e0d8-4564-9c63-900d307abdb0')
+data_source_id = database.data_sources.first.id
+
+client.data_source_query(data_source_id: data_source_id)  # retrieves the first page
+
+client.data_source_query(data_source_id: data_source_id, start_cursor: 'fe2cc560-036c-44cd-90e8-294d5a74cebc')
+
+client.data_source_query(data_source_id: data_source_id) do |page|
+  # paginate through all pages
+end
+
+client.data_source_query(data_source_id: data_source_id, sorts: sorts, filter: filter)
+```
+
+See [Pagination](#pagination) for details about how to iterate through the list.
+
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/query-a-data-source).
+
+#### Create a data source
+
+Adds a new data source to an existing database.
+
+```ruby
+client.create_data_source(
+  parent: { database_id: 'e383bcee-e0d8-4564-9c63-900d307abdb0' },
+  title: title,
+  properties: properties
+)
+```
+
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/create-a-data-source).
+
+#### Update a data source
+
+Updates an existing data source's title or property schema.
+
+```ruby
+client.update_data_source(data_source_id: data_source_id, title: title)
+```
+
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/update-a-data-source).
+
+#### Retrieve a data source
+
+Retrieves a data source object using the ID specified.
+
+```ruby
+client.data_source(data_source_id: data_source_id)
+```
+
+See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/retrieve-a-data-source).
 
 ### Pages
 
@@ -256,9 +323,11 @@ See the full endpoint documentation on [Notion Developers](https://developers.no
 
 #### Create a page
 
-Creates a new page in the specified database or as a child of an existing page.
+Creates a new page in the specified data source (or database) or as a child of an existing page.
 
-If the parent is a database, the [property values](https://developers.notion.com/reference-link/page-property-values) of the new page in the properties parameter must conform to the parent [database](https://developers.notion.com/reference-link/database)'s property schema.
+> :blue_book: As of `Notion-Version` `2025-09-03`, prefer `parent: { data_source_id: ... }` over `parent: { database_id: ... }`; the latter keeps working for databases with a single data source. See [Data sources](#data-sources).
+
+If the parent is a data source or database, the [property values](https://developers.notion.com/reference-link/page-property-values) of the new page in the properties parameter must conform to the parent's property schema.
 
 If the parent is a page, the only valid property is `title`.
 
@@ -577,14 +646,18 @@ See the full endpoint documentation on [Notion Developers](https://developers.no
 
 ### Search
 
-Searches all pages and child pages that are shared with the integration. The results may include databases.
+Searches all pages and child pages that are shared with the integration. The results may include data sources.
+
+> :blue_book: As of `Notion-Version` `2025-09-03`, the `filter` value `'database'` is replaced by `'data_source'`, and matching results are returned as `"object": "data_source"` (one per data source, so a database with multiple data sources yields multiple results) instead of `"object": "database"`. Code that filters search results by `object == 'database'` needs to check for `'data_source'` instead.
 
 ```ruby
-client.search # search through every available page and database
+client.search # search through every available page and data source
 
 client.search(query: 'Specific query') # limits which pages are returned by comparing the query to the page title
 
 client.search(filter: { property: 'object', value: 'page' }) # only returns pages
+
+client.search(filter: { property: 'object', value: 'data_source' }) # only returns data sources
 
 client.search(sort: { direction: 'ascending', timestamp: 'last_edited_time' }) # sorts the results based on the provided criteria.
 

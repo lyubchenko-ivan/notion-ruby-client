@@ -47,6 +47,20 @@ RSpec.describe Notion::Api::Endpoints::Pages do
       expect(response.properties.Name.title.first.plain_text).to eql 'Another Notion page'
     end
 
+    context 'when creating under a data source' do
+      let(:data_source_id) { '6a91c56ebc5e46699e34952e09ec53c0' }
+
+      it 'creates', vcr: { cassette_name: 'create_page_with_data_source' } do
+        response = client.create_page(
+          parent: { data_source_id: data_source_id },
+          properties: properties,
+          children: []
+        )
+        expect(response.parent.data_source_id).to eql '6a91c56e-bc5e-4669-9e34-952e09ec53c0'
+        expect(response.properties.Name.title.first.plain_text).to eql 'Another Notion page'
+      end
+    end
+
     context 'when creating under parent page' do
       let(:parent_page) { '0593a719-ff2e-44aa-a14a-2bf169429284' }
       let(:properties) do

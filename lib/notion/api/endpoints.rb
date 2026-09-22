@@ -2,6 +2,7 @@
 
 require_relative 'endpoints/blocks'
 require_relative 'endpoints/databases'
+require_relative 'endpoints/data_sources'
 require_relative 'endpoints/pages'
 require_relative 'endpoints/users'
 require_relative 'endpoints/search'
@@ -12,6 +13,7 @@ module Notion
     module Endpoints
       include Blocks
       include Databases
+      include DataSources
       include Pages
       include Users
       include Search
