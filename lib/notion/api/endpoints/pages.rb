@@ -11,7 +11,7 @@ module Notion
         # @option options [id] :page_id
         #   Page to get info on.
         #
-        # @option options [bool] :archived
+        # @option options [bool] :in_trash
         #   Set to true to retrieve an archived page; must be false or omitted to
         #   retrieve a page that has not been archived. Defaults to false.
         def page(options = {})

@@ -463,6 +463,14 @@ properties = {
 client.update_page(page_id: 'b55c9c91-384d-452b-81db-d1ef79372b75', properties: properties)
 ```
 
+To move a page to the trash, or restore it, set `in_trash`:
+
+```ruby
+client.update_page(page_id: 'b55c9c91-384d-452b-81db-d1ef79372b75', in_trash: true)
+```
+
+> :blue_book: As of `Notion-Version` `2026-03-11`, the `archived` field is renamed to `in_trash` on pages, databases, data sources and blocks, in both requests and responses.
+
 See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/patch-page).
 
 #### Retrieve a page property item
@@ -515,7 +523,7 @@ See the full endpoint documentation on [Notion Developers](https://developers.no
 
 #### Delete a block
 
-Sets a [Block object](https://developers.notion.com/reference/block), including page blocks, to archived: true using the ID specified. Note: in the Notion UI application, this moves the block to the "Trash" where it can still be accessed and restored.
+Sets a [Block object](https://developers.notion.com/reference/block), including page blocks, to `in_trash: true` using the ID specified. Note: in the Notion UI application, this moves the block to the "Trash" where it can still be accessed and restored.
 
 To restore the block with the API, use the [Update a block](#update-a-block) or [Update page](#update-page) respectively.
 
@@ -564,6 +572,22 @@ children = [
 ]
 client.block_append_children(block_id: 'b55c9c91-384d-452b-81db-d1ef79372b75', children: children)
 ```
+
+By default children are appended at the end of the parent. Use `position` to insert them elsewhere:
+
+```ruby
+# after a specific block
+client.block_append_children(
+  block_id: 'b55c9c91-384d-452b-81db-d1ef79372b75',
+  position: { type: 'after_block', after_block: { id: '9bc30ad4-9373-46a5-84ab-0a7845ee52e6' } },
+  children: children
+)
+
+# at the beginning of the parent
+client.block_append_children(block_id: 'b55c9c91-384d-452b-81db-d1ef79372b75', position: { type: 'start' }, children: children)
+```
+
+> :blue_book: As of `Notion-Version` `2026-03-11`, `position` replaces the flat `after` parameter, which is no longer accepted. Also, the `transcription` block type is renamed to `meeting_notes`.
 
 See the full endpoint documentation on [Notion Developers](https://developers.notion.com/reference/patch-block-children).
 

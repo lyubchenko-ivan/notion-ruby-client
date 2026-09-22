@@ -2,7 +2,10 @@
 
 #### Breaking changes
 
-- Bump the Notion API version to `2025-09-03`. Databases can now contain multiple data sources; querying and schema updates happen against a data source id, not a database id.
+- Bump the Notion API version to `2026-03-11` (via `2025-09-03`). Databases can now contain multiple data sources; querying and schema updates happen against a data source id, not a database id.
+- `archived` is renamed to `in_trash` on pages, databases, data sources and blocks, in both requests and responses (`2026-03-11`).
+- `block_append_children` takes `position:` (`{ type: 'after_block', after_block: { id: ... } }`, `{ type: 'start' }` or `{ type: 'end' }`) instead of `after:` (`2026-03-11`).
+- The `transcription` block type is renamed to `meeting_notes` (`2026-03-11`).
 
 #### New
 

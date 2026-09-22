@@ -34,7 +34,7 @@ module Notion
         end
 
         #
-        # Sets a Block object, including page blocks, to archived: true
+        # Sets a Block object, including page blocks, to in_trash: true
         # using the ID specified. Note: in the Notion UI application, this
         # moves the block to the "Trash" where it can still be accessed and
         # restored.
@@ -89,6 +89,12 @@ module Notion
         #
         # @option options [[Object]] :children
         #   Children blocks to append
+        #
+        # @option options [Object] :position
+        #   Where to insert the children. One of
+        #   { type: 'after_block', after_block: { id: ... } }, { type: 'start' }
+        #   or { type: 'end' } (the default). Replaces the :after parameter as of
+        #   Notion-Version 2026-03-11.
         def block_append_children(options = {})
           block_id = options.delete(:block_id)
           throw ArgumentError.new('Required arguments :block_id missing') if block_id.nil?
