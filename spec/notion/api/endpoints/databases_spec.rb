@@ -45,6 +45,15 @@ RSpec.describe Notion::Api::Endpoints::Databases do
       expect(response.title.first.plain_text).to eql 'Orbit 💜 Notion'
     end
 
+    it 'creates with an explicit initial_data_source', vcr: { cassette_name: 'create_database' } do
+      response = client.create_database(
+        parent: { page_id: page_id },
+        title: title,
+        initial_data_source: { properties: properties }
+      )
+      expect(response.title.first.plain_text).to eql 'Orbit 💜 Notion'
+    end
+
     it 'updates', vcr: { cassette_name: 'update_database' } do
       response = client.update_database(
         database_id: database_id,

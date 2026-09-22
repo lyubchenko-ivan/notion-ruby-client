@@ -16,6 +16,11 @@ module Notion
         # database properties and can be combined. The order of the sorts in the request
         # matter, with earlier sorts taking precedence over later ones.
         #
+        # @deprecated As of Notion-Version 2025-09-03, databases can hold multiple data
+        #   sources, and querying is performed against a data source id, not a database
+        #   id. Use {#data_source_query} instead, resolving the data source id via
+        #   {#database}'s :data_sources field.
+        #
         # @option options [id] :database_id
         #   Database to query.
         #
@@ -35,6 +40,8 @@ module Notion
         #   The number of items from the full list desired in the response. Maximum: 100
         def database_query(options = {})
           throw ArgumentError.new('Required arguments :database_id missing') if options[:database_id].nil?
+          logger.warn('[DEPRECATED] #database_query is deprecated as of Notion-Version 2025-09-03 ' \
+                      'and only works for databases with a single data source. Use #data_source_query instead.')
           if block_given?
             Pagination::Cursor.new(self, :database_query, options).each do |page|
               yield page
@@ -46,7 +53,12 @@ module Notion
         end
 
         #
-        # Creates a new database in the specified page.
+        # Creates a new database, with a single data source, in the specified page.
+        #
+        # As of Notion-Version 2025-09-03, the property schema is nested under
+        # :initial_data_source instead of being a top-level :properties argument. For
+        # convenience, a top-level :properties option is still accepted here and is
+        # wrapped into :initial_data_source automatically.
         #
         # @option options [Object] :parent
         #   Parent of the database, which is always going to be a page.
@@ -54,8 +66,12 @@ module Notion
         # @option options [Object] :title
         #   Title of this database.
         #
+        # @option options [Object] :initial_data_source
+        #   The initial data source for this database, e.g. { properties: { ... } }.
+        #
         # @option options [Object] :properties
-        #   Property schema of database.
+        #   Shorthand for initial_data_source[:properties]. Property schema of the
+        #   database's initial data source.
         #   The keys are the names of properties as they appear in Notion and the values are
         #   property schema objects. Property Schema Object is a metadata that controls
         #   how a database property behaves, e.g. {"checkbox": {}}.
@@ -63,12 +79,24 @@ module Notion
         def create_database(options = {})
           throw ArgumentError.new('Required arguments :parent.page_id missing') if options.dig(:parent, :page_id).nil?
           throw ArgumentError.new('Required arguments :title missing') if options.dig(:title).nil?
-          throw ArgumentError.new('Required arguments :properties missing') if options.dig(:properties).nil?
+
+          properties = options.delete(:properties)
+          if options[:initial_data_source].nil?
+            throw ArgumentError.new('Required arguments :properties missing') if properties.nil?
+
+            options[:initial_data_source] = { properties: properties }
+          end
+
           post('databases', options)
         end
 
         #
         # Updates an existing database as specified by the parameters.
+        #
+        # As of Notion-Version 2025-09-03, this endpoint only accepts database-level
+        # fields (:title, :description, :icon, :cover, :is_inline, :in_trash,
+        # :is_locked, :parent). Updating a :properties schema is now done per data
+        # source via {#update_data_source}.
         #
         # @option options [id] :database_id
         #   Database to update.
@@ -76,13 +104,6 @@ module Notion
         # @option options [Object] :title
         #   Title of database as it appears in Notion. An array of rich text objects.
         #   If omitted, the database title will remain unchanged.
-        #
-        # @option options [Object] :properties
-        #   Updates to the property schema of a database.
-        #   If updating an existing property, the keys are the names or IDs
-        #   of the properties as they appear in Notion and the values
-        #   are property schema objects. If adding a new property, the key is
-        #   the name of the database property and the value is a property schema object.
         #
         def update_database(options = {})
           database_id = options.delete(:database_id)
@@ -96,6 +117,10 @@ module Notion
         # Returns a 404 HTTP response if the database doesn't exist, or if the bot
         # doesn't have access to the database. Returns a 429 HTTP response if the
         # request exceeds Notion's Request limits.
+        #
+        # As of Notion-Version 2025-09-03, the response's :data_sources field lists
+        # the data source ids and names that belong to this database, for use with
+        # {#data_source_query}, {#data_source} and {#update_data_source}.
         #
         # @option options [id] :database_id
         #   Database to get info on.

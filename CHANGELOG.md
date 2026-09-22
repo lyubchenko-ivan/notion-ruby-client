@@ -1,3 +1,19 @@
+### 1.3.0 (unreleased)
+
+#### Breaking changes
+
+- Bump the Notion API version to `2025-09-03`. Databases can now contain multiple data sources; querying and schema updates happen against a data source id, not a database id.
+
+#### New
+
+- Add support for the Data sources endpoints: `data_source_query`, `create_data_source`, `update_data_source`, `data_source`.
+- `create_page` accepts `parent: { data_source_id: ... }`.
+- `create_database` accepts `initial_data_source:` (still accepts a bare `properties:` for backward compatibility, wrapped automatically).
+
+#### Deprecated
+
+- `database_query` now logs a deprecation warning; use `data_source_query`.
+
 ### 1.2.2 (2023-10-02)
 
 #### Improved

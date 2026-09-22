@@ -1,0 +1,29 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.notion.com/v1/data_sources/6a91c56ebc5e46699e34952e09ec53c0/query
+    body:
+      encoding: UTF-8
+      string: '{"page_size":1}'
+    headers:
+      Accept:
+      - application/json; charset=utf-8
+      Authorization:
+      - Bearer <NOTION_API_TOKEN>
+      Notion-Version:
+      - '2025-09-03'
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    body:
+      encoding: UTF-8
+      string: '{"object":"list","results":[{"object":"page","id":"c7fd1abe-8114-44ea-be77-9632ea33e581","created_time":"2021-04-30T07:49:00.000Z","last_edited_time":"2021-08-29T17:45:00.000Z","cover":null,"icon":null,"parent":{"type":"data_source_id","data_source_id":"6a91c56e-bc5e-4669-9e34-952e09ec53c0","database_id":"dd428e9d-d3fe-4171-870d-a7a1902c748b"},"archived":false,"properties":{"Name":{"id":"title","type":"title","title":[{"type":"text","text":{"content":"Nicolas Goutay","link":null},"annotations":{"bold":false,"italic":false,"strikethrough":false,"underline":false,"code":false,"color":"default"},"plain_text":"Nicolas Goutay","href":null}]}},"url":"https://www.notion.so/Nicolas-Goutay-c7fd1abe811444eabe779632ea33e581"}],"next_cursor":null,"has_more":false,"type":"page","page":{}}'
+  recorded_at: Wed, 03 Sep 2025 12:00:00 GMT
+recorded_with: VCR 6.0.0
